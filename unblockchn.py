@@ -112,7 +112,7 @@ Unblock CHN 路由器命令：
         iptables_chn_exists = cls.check_iptables_chn()
         if iptables_chn_exists:
             ss_redir_conf_name = cls.get_nvram("unblockchn_ss_conf")
-            ologger.info(f"已开启 ({ss_redir_conf_name})")
+            ologger.info(f"已开启 ({})".format(ss_redir_conf_name))
         else:
             ologger.info("已关闭")
 
@@ -128,9 +128,9 @@ Unblock CHN 路由器命令：
             cls.add_iptables_chn()
         ss_redir_conf_name = cls.get_nvram("unblockchn_ss_conf")
         if ss_redir_running and iptables_chn_exists:
-            ologger.info(f"已经开启 ({ss_redir_conf_name})")
+            ologger.info("已经开启 ({})".format(ss_redir_conf_name))
         else:
-            ologger.info(f"开启成功 ({ss_redir_conf_name})")
+            ologger.info("开启成功 ({})".format(ss_redir_conf_name))
         # 记录开启状态到 nvram 变量
         cls.set_nvram('unblockchn_on', "True")
 
@@ -536,7 +536,8 @@ Unblock CHN 还原路由器为未配置状态
         cls.start_ss_redir()
 
         # 保存 ss-redir 启动命令到路由器的 services-start 启动脚本中
-        cmd = f'{SS_REDIR_PATH} -c {SHADOWSOCKS_DIR_PATH}/"$(nvram get unblockchn_ss_conf)".json -f {SS_REDIR_PID_PATH}'
+        ss_conf_name = cls.get_nvram('unblockchn_ss_conf')
+        cmd = f'{SS_REDIR_PATH} -c {SHADOWSOCKS_DIR_PATH} {ss_conf_name}.json -f {SS_REDIR_PID_PATH}'
         comment = "# ss-redir"
         cls.append_to_script(SERVICES_START_SCRIPT_PATH, comment, cmd)
         elogger.info(f"✔ 保存 ss-redir 启动命令到路由器的 services-start 启动脚本中：{SERVICES_START_SCRIPT_PATH}")
@@ -577,7 +578,8 @@ Unblock CHN 还原路由器为未配置状态
 
         # 保存 iptables 添加规则命令到路由器的 nat-start 启动脚本中
         comment = "# Redirect chn ipset to ss-redir"
-        cmd = f'if [ "$(nvram get unblockchn_on)" = "True" ]; then {ADD_IPTABLES_CHN_CMD}; fi'
+        unblockchn_on = cls.get_nvram('unblockchn_on')
+        cmd = f'if [ {unblockchn_on} = "True" ]; then {ADD_IPTABLES_CHN_CMD}; fi'
         cls.append_to_script(NAT_START_SCRIPT_PATH, comment, cmd)
         elogger.info(f"✔ 保存 iptables 规则添加命令到路由器的 nat-start 启动脚本中：{NAT_START_SCRIPT_PATH}")
 
@@ -944,25 +946,45 @@ Unblock CHN 还原路由器为未配置状态
     @classmethod
     def set_nvram(cls, name, value):
         """设置 nvram 值"""
-        cmd = f"nvram set {name}={value}"
-        subprocess.check_call(cmd, shell=True)
-        cmd = "nvram commit"
-        subprocess.check_call(cmd, shell=True)
+        with open('nvram.json') as json_data_file:
+            data = json.load(json_data_file)
+
+        with open('config.json', 'w') as outfile:
+            data[name] = value
+            json.dump(data, outfile)
+
+        #cmd = f"nvram set {name}={value}"
+        #subprocess.check_call(cmd, shell=True)
+        #cmd = "nvram commit"
+        #subprocess.check_call(cmd, shell=True)
 
     @classmethod
     def get_nvram(cls, name):
         """获取 nvram 值"""
-        cmd = f"nvram get {name}"
-        output = subprocess.check_output(cmd, shell=True)
-        return output.strip().decode('utf-8')
+        with open('nvram.json') as json_data_file:
+            data = json.load(json_data_file)
+        return data[name]
+
+
+
+        #cmd = f"nvram get {name}"
+        #output = subprocess.check_output(cmd, shell=True)
+        #return output.strip().decode('utf-8')
 
     @classmethod
     def remove_nvram(cls, name):
         """删除 nvram 值"""
-        cmd = f"nvram unset {name}"
-        subprocess.check_call(cmd, shell=True)
-        cmd = "nvram commit"
-        subprocess.check_call(cmd, shell=True)
+        with open('nvram.json') as json_data_file:
+            data = json.load(json_data_file)
+
+        with open('nvram.json', 'w') as outfile:
+            data[name] = ''
+            json.dump(data, outfile)
+
+        #cmd = f"nvram unset {name}"
+        #subprocess.check_call(cmd, shell=True)
+        #cmd = "nvram commit"
+        #subprocess.check_call(cmd, shell=True)
 
 
 class Surge(object):
