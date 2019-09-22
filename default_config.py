@@ -20,10 +20,10 @@ UNBLOCK_YOUKU_URLSJS_URL = "https://raw.githubusercontent.com/uku/Unblock-Youku/
 # --- router ---
 
 # python3 命令路径
-PYTHON3_PATH = "/opt/bin/python3"
+PYTHON3_PATH = "/home/pi/miniconda3/bin/python3"
 
 # ss_redir 命令路径
-SS_REDIR_PATH = "/opt/bin/ss-redir"
+SS_REDIR_PATH = "/usr/bin/ss-redir"
 # ss_redir pid 文件路径
 SS_REDIR_PID_PATH = os.path.join(SHADOWSOCKS_DIR_PATH, "ss-redir.pid")
 # ss_redir 本地端口

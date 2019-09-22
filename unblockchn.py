@@ -112,7 +112,7 @@ Unblock CHN 路由器命令：
         iptables_chn_exists = cls.check_iptables_chn()
         if iptables_chn_exists:
             ss_redir_conf_name = cls.get_nvram("unblockchn_ss_conf")
-            ologger.info(f"已开启 ({})".format(ss_redir_conf_name))
+            ologger.info(f"已开启 ({ss_redir_conf_name})")
         else:
             ologger.info("已关闭")
 
@@ -128,9 +128,9 @@ Unblock CHN 路由器命令：
             cls.add_iptables_chn()
         ss_redir_conf_name = cls.get_nvram("unblockchn_ss_conf")
         if ss_redir_running and iptables_chn_exists:
-            ologger.info("已经开启 ({})".format(ss_redir_conf_name))
+            ologger.info("已经开启 ({ss_redir_conf_name})")
         else:
-            ologger.info("开启成功 ({})".format(ss_redir_conf_name))
+            ologger.info("开启成功 ({ss_redir_conf_name})")
         # 记录开启状态到 nvram 变量
         cls.set_nvram('unblockchn_on', "True")
 
@@ -949,7 +949,7 @@ Unblock CHN 还原路由器为未配置状态
         with open('nvram.json') as json_data_file:
             data = json.load(json_data_file)
 
-        with open('config.json', 'w') as outfile:
+        with open('nvram.json', 'w') as outfile:
             data[name] = value
             json.dump(data, outfile)
 
