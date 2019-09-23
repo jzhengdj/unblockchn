@@ -128,9 +128,9 @@ Unblock CHN 路由器命令：
             cls.add_iptables_chn()
         ss_redir_conf_name = cls.get_nvram("unblockchn_ss_conf")
         if ss_redir_running and iptables_chn_exists:
-            ologger.info("已经开启 ({ss_redir_conf_name})")
+            ologger.info(f"已经开启 ({ss_redir_conf_name})")
         else:
-            ologger.info("开启成功 ({ss_redir_conf_name})")
+            ologger.info(f"开启成功 ({ss_redir_conf_name})")
         # 记录开启状态到 nvram 变量
         cls.set_nvram('unblockchn_on', "True")
 
@@ -271,9 +271,10 @@ Unblock CHN 路由器命令：
             domain = urlsplit(args.url).hostname
         else:
             domain = args.url.split('/')[0]
+
         ip = socket.gethostbyname(domain)
 
-        cmd = f"ipset test chn {ip}"
+        cmd = f"sudo ipset test chn {ip}"
         returncode = subprocess.call(
             cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if returncode == 0:
@@ -291,15 +292,15 @@ Unblock CHN 路由器命令：
         cls.create_conf_files(unblock_youku.black_domains)
 
         # 复制 ipset 和 dnsmasq 规则配置文件到 jffs 配置目录
-        cls.cp_ipset_conf_to_jffs()
-        cls.cp_dnsmasq_conf_to_jffs()
+        #cls.cp_ipset_conf_to_jffs()
+        #cls.cp_dnsmasq_conf_to_jffs()
 
         # 清空 chn 和其它自定义的 ipset 表
         cls.flush_ipset()
 
         # 载入 ipset 规则
         headless_ipset_conf_path = os.path.join(CONFIGS_DIR_PATH, "ipset.headless.rules")
-        cmd = f"ipset restore < {headless_ipset_conf_path}"
+        cmd = f"sudo ipset restore < {headless_ipset_conf_path}"
         subprocess.check_call(cmd, shell=True)
         elogger.info(f"✔ 载入 ipset 规则：{cmd}")
 
@@ -328,8 +329,8 @@ Unblock CHN 一键配置路由器
         cls.create_conf_files(unblock_youku.black_domains)
 
         # 复制 ipset 和 dnsmasq 规则配置文件到 jffs 配置目录
-        cls.cp_ipset_conf_to_jffs()
-        cls.cp_dnsmasq_conf_to_jffs()
+        #cls.cp_ipset_conf_to_jffs()
+        #cls.cp_dnsmasq_conf_to_jffs()
 
         # 配置 ipset 和 iptables
         cls.setup_ipset_iptables()
@@ -419,10 +420,10 @@ Unblock CHN 还原路由器为未配置状态
         # 移除每日更新规则的 cron 定时任务
         cls.remove_renew_cron_job()
 
-        # 从启动脚本里移除 xt_set 模块加载命令
-        comment = "# Load xt_set module"
-        cls.remove_from_script(SERVICES_START_SCRIPT_PATH, comment)
-        elogger.info(f"✔ 从启动脚本里移除 xt_set 模块加载命令：{SERVICES_START_SCRIPT_PATH}")
+        # # 从启动脚本里移除 xt_set 模块加载命令
+        # comment = "# Load xt_set module"
+        # cls.remove_from_script(SERVICES_START_SCRIPT_PATH, comment)
+        # elogger.info(f"✔ 从启动脚本里移除 xt_set 模块加载命令：{SERVICES_START_SCRIPT_PATH}")
 
         # 删除 nvram 中 unblockchn_on 变量
         cls.remove_nvram('unblockchn_on')
@@ -546,18 +547,18 @@ Unblock CHN 还原路由器为未配置状态
     def setup_ipset_iptables(cls):
         """配置 ipset 和 iptables"""
 
-        # 加载 xt_set 模块
-        xt_set_cmd = "modprobe xt_set"
-        subprocess.check_call(xt_set_cmd, shell=True)
-        elogger.info(f"✔ 加载 xt_set 模块：{xt_set_cmd}")
-
-        # 保存 xt_set 模块加载命令到路由器的 services-start 启动脚本中
-        comment = "# Load xt_set module"
-        cls.append_to_script(SERVICES_START_SCRIPT_PATH, comment, xt_set_cmd)
-        elogger.info(f"✔ 保存 xt_set 模块加载命令到路由器的 services-start 启动脚本中：{SERVICES_START_SCRIPT_PATH}")
+        # # 加载 xt_set 模块
+        # xt_set_cmd = "modprobe xt_set"
+        # subprocess.check_call(xt_set_cmd, shell=True)
+        # elogger.info(f"✔ 加载 xt_set 模块：{xt_set_cmd}")
+        #
+        # # 保存 xt_set 模块加载命令到路由器的 services-start 启动脚本中
+        # comment = "# Load xt_set module"
+        # cls.append_to_script(SERVICES_START_SCRIPT_PATH, comment, xt_set_cmd)
+        # elogger.info(f"✔ 保存 xt_set 模块加载命令到路由器的 services-start 启动脚本中：{SERVICES_START_SCRIPT_PATH}")
 
         # 载入 ipset 规则
-        ipset_cmd = f"ipset restore < {IPSET_CONF_JFFS_PATH}"
+        ipset_cmd = f"sudo ipset restore < {IPSET_CONF_JFFS_PATH}"
         try:
             subprocess.check_output(ipset_cmd, shell=True, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
@@ -716,8 +717,15 @@ Unblock CHN 还原路由器为未配置状态
     def add_renew_cron_job(cls):
         """添加每日更新规则的 cron 定时任务"""
         unblockchn_path = os.path.realpath(__file__)
-        renew_cmd = f"0 {RENEW_TIME} * * * {PYTHON3_PATH} {unblockchn_path} router renew"
-        cron_cmd = f'cru a unblockchn_renew "{renew_cmd}"'
+        renew_cmd = f"0 {RENEW_TIME} * * * {PYTHON3_PATH} {unblockchn_path} router renew\r\n"
+
+        # 写入定时任务到文件中
+        renew_task_path = os.path.join(DIR_PATH, "configs/renew_task")
+        with open(renew_task_path, 'w', encoding='utf-8') as f:
+            f.write(renew_cmd)
+        elogger.info("✔ 生成 corn 任务配置模板文件：renew_task")
+
+        cron_cmd = "crontab configs/renew_task"
         try:
             subprocess.check_call(cron_cmd, shell=True)
         except subprocess.CalledProcessError as e:
@@ -871,7 +879,7 @@ Unblock CHN 还原路由器为未配置状态
     @classmethod
     def check_chn_ipset(cls):
         """检查 ipset 是否有 chn 表"""
-        cmd = "ipset list chn"
+        cmd = "sudo ipset list chn"
         returncode = subprocess.call(
             cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return returncode == 0
@@ -904,7 +912,7 @@ Unblock CHN 还原路由器为未配置状态
         ipset_names = cls.get_ipset_names()
 
         for ipset_name in ipset_names:
-            cmd = f"ipset flush {ipset_name}"
+            cmd = f"sudo ipset flush {ipset_name}"
             subprocess.check_call(cmd, shell=True)
             elogger.info(f"✔ 清空 ipset 的 {ipset_name} 表：{cmd}")
 

@@ -42,24 +42,25 @@ SS_REDIR_CONF_TPL = {
 }
 
 # iptables 添加 chn ipset 规则命令
-ADD_IPTABLES_CHN_CMD = f"iptables -t nat -A PREROUTING -p tcp -m set --match-set chn dst -j REDIRECT --to-port {SS_REDIR_LOCAL_PORT}"
+ADD_IPTABLES_CHN_CMD = f"sudo iptables -t nat -A PREROUTING -p tcp -m set --match-set chn dst -j REDIRECT --to-port {SS_REDIR_LOCAL_PORT}"
 # iptables 删除 chn ipset 规则命令
-DELETE_IPTABLES_CHN_CMD = f"iptables -t nat -D PREROUTING -p tcp -m set --match-set chn dst -j REDIRECT --to-port {SS_REDIR_LOCAL_PORT}"
+DELETE_IPTABLES_CHN_CMD = f"sudo iptables -t nat -D PREROUTING -p tcp -m set --match-set chn dst -j REDIRECT --to-port {SS_REDIR_LOCAL_PORT}"
 # iptables 检查 chn ipset 规则命令
-CHECK_IPTABLES_CHN_CMD = f"iptables -t nat -C PREROUTING -p tcp -m set --match-set chn dst -j REDIRECT --to-port {SS_REDIR_LOCAL_PORT}"
+CHECK_IPTABLES_CHN_CMD = f"sudo iptables -t nat -C PREROUTING -p tcp -m set --match-set chn dst -j REDIRECT --to-port {SS_REDIR_LOCAL_PORT}"
 
-# ipset 规则配置文件在 jffs 分区下的保存路径
-IPSET_CONF_JFFS_PATH = "/jffs/configs/ipset.rules"
-# dnsmasq 规则配置文件在 jffs 分区下的保存路径
-DNSMASQ_CONF_JFFS_PATH = "/jffs/configs/dnsmasq.conf.add"
+# ipset 规则配置文件 的保存路径
+IPSET_CONF_JFFS_PATH = "configs/ipset.rules"
+# dnsmasq 规则配置文件 的保存路径
+DNSMASQ_CONF_JFFS_PATH = "configs/dnsmasq/dnsmasq.conf.add"
+# = "/etc/dnsmasq.d/dnsmasq.conf.add"
 
 # services-start 启动脚本路径
-SERVICES_START_SCRIPT_PATH = "/jffs/scripts/services-start"
+SERVICES_START_SCRIPT_PATH = "scripts/services-start"
 # nat-start 启动脚本路径
-NAT_START_SCRIPT_PATH = "/jffs/scripts/nat-start"
+NAT_START_SCRIPT_PATH = "scripts/nat-start"
 
 # dnsmasq 重启命令
-DNSMASQ_RESTART_CMD = "service restart_dnsmasq"
+DNSMASQ_RESTART_CMD = "sudo /etc/init.d/dnsmasq restart"
 
 # 定时每天几点更新规则
 RENEW_TIME = 3
